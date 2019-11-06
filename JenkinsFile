@@ -27,7 +27,6 @@ pipeline {
         }
          steps {
             echo 'Building...'
-            sh 'dotnet build ./DemoApp/DemoApp.csproj'
          }
       }
       stage('QA') {
