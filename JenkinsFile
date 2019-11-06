@@ -1,26 +1,58 @@
 pipeline {
-     agent { label 'master' }
- 
-    stages {
-        stage('Build') {
-            steps {
-                echo 'Building..'
-            }
+    agent { label 'master' }
+    
+   parameters{
+      choice(
+        name: 'Environment',
+        choices: "Refresh\nBuild\nQA\nStage\nProd",
+        description: 'Please select the pipeline action'
+      )
+   }
+    
+   stages {
+      stage('Refresh pipeline') {
+        when {
+          expression { "${params.Environment}" == 'Refresh' }
         }
-        stage('QA') {
-            steps {
-                echo 'Deployed on QA..'
-            }
+        steps {
+          echo "Pipeline refreshed"
         }
-        stage('Stage') {
-            steps {
-                echo 'Deployed on Stage....'
-            }
+      }
+      stage('Build') {
+        when {
+         anyOf{
+            expression { "${params.Environment}" == 'Build' }
+            expression { "${params.Environment}" == 'QA'}
+           }
         }
-        stage('Prod') {
-            steps {
-                echo 'Deployed on Prod....'
-            }
-        }
-    }
+         steps {
+            echo 'Building...'
+            sh 'dotnet build ./DemoApp/DemoApp.csproj'
+         }
+      }
+      stage('QA') {
+         when {
+           expression { "${params.Environment}" == 'QA'}
+         }
+         steps {
+            echo 'Deploying on QA'
+         }
+      }
+      stage('Stage') {
+        when {
+            expression { "${params.Environment}" == 'Stage'}
+         }
+         steps {
+            echo 'Deploying on Stage'
+         }
+      }
+      stage('Prod') {
+         when {
+            expression { "${params.Environment}" == 'Prod'}
+         }
+         steps {
+            echo 'Deploying on Prod'
+         }
+      }
+   }
 }
